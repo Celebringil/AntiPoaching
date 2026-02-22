@@ -142,7 +142,7 @@ header p {
     content: "🦁"; 
 }
 .map-cell.terrain { 
-    background: #795f56; 
+    background: #8c8b8b; 
     border-radius: 10px;
 }
 .map-cell.patrol { 
@@ -178,7 +178,7 @@ header p {
 .legend-color.risk-medium { background: #b99d73; }
 .legend-color.risk-low { background: #80b782; }
 .legend-color.animal { background: #fff3e0; }
-.legend-color.terrain { background: #795f56; }
+.legend-color.terrain { background: #8c8b8b; }
 
 /* Stats */
 .stats-grid {
