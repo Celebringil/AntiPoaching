@@ -6,7 +6,11 @@
 
 body {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    background: linear-gradient(135deg, #1d4c30 0%, #2c6440 100%);
+    background-image: url('../../images/adobestock_33113644.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     min-height: 100vh;
     color: #333;
 }
