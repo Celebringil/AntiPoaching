@@ -1,7 +1,3 @@
-/**
- * Main application logic - Local optimization algorithm
- */
-
 // Current map state
 let currentMap = {
     gridSize: 10,
@@ -10,9 +6,6 @@ let currentMap = {
     terrainMap: []
 };
 
-/**
- * Generate a random map
- */
 function generateRandomMap() {
     const gridSize = parseInt(document.getElementById('gridSize').value);
     currentMap.gridSize = gridSize;
@@ -58,9 +51,6 @@ function generateRandomMap() {
     document.getElementById('randomRow').classList.add('hidden');
 }
 
-/**
- * Run the optimization algorithm
- */
 async function runOptimization() {
     const rangerCount = parseInt(document.getElementById('rangerCount').value);
     const maxSteps = parseInt(document.getElementById('maxSteps').value);
@@ -83,11 +73,7 @@ async function runOptimization() {
         };
 
         const result = await runLocalOptimization(params);
-
-        // Animate the routes
         await Visualizer.animateRoutes(result.routes, 50);
-
-        // Update statistics for optimized patrol
         Visualizer.updateStatsOptimized(result.stats);
 
     } catch (error) {
@@ -98,42 +84,28 @@ async function runOptimization() {
     }
 }
 
-/**
- * Local optimization algorithm using greedy strategy
- */
 async function runLocalOptimization(params) {
-    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
     const routes = [];
     const coverage = Array(params.gridSize).fill(null)
         .map(() => Array(params.gridSize).fill(0));
-
-    // Simple greedy algorithm for demo
     for (let r = 0; r < params.rangerCount; r++) {
         const path = [];
-
-        // Find starting position (passable cell)
         let startRow, startCol;
         do {
             startRow = Math.floor(Math.random() * params.gridSize);
             startCol = Math.floor(Math.random() * params.gridSize);
         } while (params.terrainMap[startRow][startCol] === 0);
-
         let currentRow = startRow;
         let currentCol = startCol;
         path.push([currentRow, currentCol]);
         coverage[currentRow][currentCol]++;
-
-        // Greedy walk
         for (let step = 1; step < params.maxSteps; step++) {
             const neighbors = getNeighbors(currentRow, currentCol, params);
             if (neighbors.length === 0) break;
-
-            // Score each neighbor
             let bestNeighbor = neighbors[0];
             let bestScore = -Infinity;
-
             for (const [nr, nc] of neighbors) {
                 const risk = params.riskMap[nr][nc];
                 const animal = params.animalMap[nr][nc] ? 1 : 0;
@@ -145,7 +117,6 @@ async function runLocalOptimization(params) {
                     bestNeighbor = [nr, nc];
                 }
             }
-
             currentRow = bestNeighbor[0];
             currentCol = bestNeighbor[1];
             path.push([currentRow, currentCol]);
@@ -154,13 +125,10 @@ async function runLocalOptimization(params) {
 
         routes.push({ rangerId: r, path: path });
     }
-
-    // Calculate statistics
     let totalRisk = 0;
     let coveredRisk = 0;
     let highRiskCells = 0;
     let coveredHighRisk = 0;
-
     for (let row = 0; row < params.gridSize; row++) {
         for (let col = 0; col < params.gridSize; col++) {
             if (params.terrainMap[row][col] === 1) {
@@ -173,16 +141,14 @@ async function runLocalOptimization(params) {
                         coveredHighRisk++;
                     }
                 }
-
                 if (coverage[row][col] > 0) {
-                    coveredRisk += risk * 0.2; // 80% reduction
+                    coveredRisk += risk * 0.2;
                 } else {
                     coveredRisk += risk;
                 }
             }
         }
     }
-
     const beforeRisk = totalRisk / (params.gridSize * params.gridSize);
     const afterRisk = coveredRisk / (params.gridSize * params.gridSize);
     const reduction = ((beforeRisk - afterRisk) / beforeRisk * 100).toFixed(0);
@@ -202,41 +168,29 @@ async function runLocalOptimization(params) {
     };
 }
 
-/**
- * Get valid neighboring cells
- */
 function getNeighbors(row, col, params) {
     const neighbors = [];
     const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-
     for (const [dr, dc] of directions) {
         const nr = row + dr;
         const nc = col + dc;
-
         if (nr >= 0 && nr < params.gridSize &&
             nc >= 0 && nc < params.gridSize &&
             params.terrainMap[nr][nc] === 1) {
             neighbors.push([nr, nc]);
         }
     }
-
     return neighbors;
 }
 
-/**
- * Run the random patrol algorithm
- */
 async function runRandomPatrol() {
     const rangerCount = parseInt(document.getElementById('rangerCount').value);
     const maxSteps = parseInt(document.getElementById('maxSteps').value);
-
     if (currentMap.riskMap.length === 0) {
         alert('Please generate a map first!');
         return;
     }
-
     Visualizer.setLoading(true);
-
     try {
         const params = {
             gridSize: currentMap.gridSize,
@@ -246,15 +200,9 @@ async function runRandomPatrol() {
             animalMap: currentMap.animalMap,
             terrainMap: currentMap.terrainMap
         };
-
         const result = await runRandomPatrolAlgorithm(params);
-
-        // Animate the routes
         await Visualizer.animateRoutes(result.routes, 50);
-
-        // Update statistics for random patrol
         Visualizer.updateStatsRandom(result.stats);
-
     } catch (error) {
         alert('Random patrol failed: ' + error.message);
         console.error(error);
@@ -263,47 +211,31 @@ async function runRandomPatrol() {
     }
 }
 
-/**
- * Get 8-directional neighbors for random patrol
- */
 function getNeighbors8(row, col, params) {
     const neighbors = [];
-    // 8 directions: up, down, left, right, and 4 diagonals
     const directions = [
         [-1, 0], [1, 0], [0, -1], [0, 1],
         [-1, -1], [-1, 1], [1, -1], [1, 1]
     ];
-
     for (const [dr, dc] of directions) {
         const nr = row + dr;
         const nc = col + dc;
-
         if (nr >= 0 && nr < params.gridSize &&
             nc >= 0 && nc < params.gridSize &&
             params.terrainMap[nr][nc] === 1) {
             neighbors.push([nr, nc]);
         }
     }
-
     return neighbors;
 }
 
-/**
- * Random patrol algorithm - pure random walk with 8 directions
- */
 async function runRandomPatrolAlgorithm(params) {
-    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
-
     const routes = [];
     const coverage = Array(params.gridSize).fill(null)
         .map(() => Array(params.gridSize).fill(0));
-
-    // Pure random patrol
     for (let r = 0; r < params.rangerCount; r++) {
         const path = [];
-
-        // Find starting position (passable cell)
         let startRow, startCol;
         do {
             startRow = Math.floor(Math.random() * params.gridSize);
@@ -314,25 +246,17 @@ async function runRandomPatrolAlgorithm(params) {
         let currentCol = startCol;
         path.push([currentRow, currentCol]);
         coverage[currentRow][currentCol]++;
-
-        // Pure random walk - randomly pick from 8 neighbors
         for (let step = 1; step < params.maxSteps; step++) {
             const neighbors = getNeighbors8(currentRow, currentCol, params);
             if (neighbors.length === 0) break;
-
-            // Randomly select from all neighbors (no preference)
             const nextCell = neighbors[Math.floor(Math.random() * neighbors.length)];
-
             currentRow = nextCell[0];
             currentCol = nextCell[1];
             path.push([currentRow, currentCol]);
             coverage[currentRow][currentCol]++;
         }
-
         routes.push({ rangerId: r, path: path });
     }
-
-    // Calculate statistics (same as optimization)
     let totalRisk = 0;
     let coveredRisk = 0;
     let highRiskCells = 0;
@@ -343,23 +267,20 @@ async function runRandomPatrolAlgorithm(params) {
             if (params.terrainMap[row][col] === 1) {
                 const risk = params.riskMap[row][col];
                 totalRisk += risk;
-
                 if (risk >= 0.7) {
                     highRiskCells++;
                     if (coverage[row][col] > 0) {
                         coveredHighRisk++;
                     }
                 }
-
                 if (coverage[row][col] > 0) {
-                    coveredRisk += risk * 0.2; // 80% reduction
+                    coveredRisk += risk * 0.2;
                 } else {
                     coveredRisk += risk;
                 }
             }
         }
     }
-
     const beforeRisk = totalRisk / (params.gridSize * params.gridSize);
     const afterRisk = coveredRisk / (params.gridSize * params.gridSize);
     const reduction = ((beforeRisk - afterRisk) / beforeRisk * 100).toFixed(0);
@@ -379,12 +300,10 @@ async function runRandomPatrolAlgorithm(params) {
     };
 }
 
-// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generateBtn').addEventListener('click', generateRandomMap);
     document.getElementById('optimizeBtn').addEventListener('click', runOptimization);
     document.getElementById('randomPatrolBtn').addEventListener('click', runRandomPatrol);
 
-    // Generate initial map
     generateRandomMap();
 });
