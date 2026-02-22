@@ -1,0 +1,30 @@
+# Deploy: sam build && sam deploy --guided
+
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  OptimizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.11
+      Handler: optimization_random.lambda_handler
+      MemorySize: 512
+      Timeout: 30
+      Events:
+        OptimizeApi:
+          Type: Api
+          Properties:
+            Path: /optimize
+            Method: POST
+      Environment:
+        Variables: {}
+    Metadata:
+      BuildMethod: python3.11
+
+Globals:
+  Api:
+    Cors:
+      AllowOrigin: "'*'"
+      AllowHeaders: "'Content-Type'"
+      AllowMethods: "'POST,OPTIONS'"
