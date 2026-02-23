@@ -7,7 +7,7 @@ Resources:
   OptimizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Runtime: python3.11
+      Runtime: python3.13
       Handler: optimization_random.lambda_handler
       MemorySize: 512
       Timeout: 30
@@ -20,7 +20,7 @@ Resources:
       Environment:
         Variables: {}
     Metadata:
-      BuildMethod: python3.11
+      BuildMethod: python3.13
 
 Globals:
   Api:
