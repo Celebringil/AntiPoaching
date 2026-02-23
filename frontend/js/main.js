@@ -1,8 +1,3 @@
-/**
- * Main application logic - AWS Lambda backend integration
- */
-
-// Current map state
 let currentMap = {
     gridSize: 10,
     riskMap: [],
@@ -10,11 +5,8 @@ let currentMap = {
     terrainMap: []
 };
 
-const API_ENDPOINT = 'https://YOUR_API_GATEWAY_URL/optimize';
+const API_ENDPOINT = 'https://hsd0dhxxq1.execute-api.us-east-2.amazonaws.com/Prod/optimize';
 
-/**
- * Generate a random map
- */
 function generateRandomMap() {
     const gridSize = parseInt(document.getElementById('gridSize').value);
     currentMap.gridSize = gridSize;
@@ -28,18 +20,14 @@ function generateRandomMap() {
         const terrainRow = [];
 
         for (let col = 0; col < gridSize; col++) {
-            // Generate terrain (90% passable, 10% impassable)
             const isPassable = Math.random() > 0.1 ? 1 : 0;
             terrainRow.push(isPassable);
 
             if (isPassable) {
-                // Generate risk (higher near edges for realism)
                 const edgeFactor = Math.min(row, col, gridSize - 1 - row, gridSize - 1 - col) / (gridSize / 2);
                 const baseRisk = Math.random();
                 const risk = Math.max(0, Math.min(1, baseRisk * (1 - edgeFactor * 0.5)));
                 riskRow.push(Math.round(risk * 100) / 100);
-
-                // Generate animals (20% chance, prefer center areas)
                 const hasAnimal = Math.random() < 0.2 * (1 - edgeFactor * 0.3);
                 animalRow.push(hasAnimal);
             } else {
@@ -54,26 +42,19 @@ function generateRandomMap() {
     }
 
     Visualizer.renderMap(currentMap, gridSize);
-    // Hide results and reset both rows
     document.getElementById('results').classList.add('hidden');
     document.getElementById('optimizedRow').classList.add('hidden');
     document.getElementById('randomRow').classList.add('hidden');
 }
 
-/**
- * Run the optimization algorithm
- */
 async function runOptimization() {
     const rangerCount = parseInt(document.getElementById('rangerCount').value);
     const maxSteps = parseInt(document.getElementById('maxSteps').value);
-
     if (currentMap.riskMap.length === 0) {
         alert('Please generate a map first!');
         return;
     }
-
     Visualizer.setLoading(true);
-
     try {
         const params = {
             gridSize: currentMap.gridSize,
@@ -83,19 +64,13 @@ async function runOptimization() {
             animalMap: currentMap.animalMap,
             terrainMap: currentMap.terrainMap
         };
-
         const result = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode: 'optimized', ...params })
         }).then(r => r.json());
-
-        // Animate the routes
         await Visualizer.animateRoutes(result.routes, 50);
-
-        // Update statistics for optimized patrol
         Visualizer.updateStatsOptimized(result.stats);
-
     } catch (error) {
         alert('Optimization failed: ' + error.message);
         console.error(error);
@@ -104,20 +79,14 @@ async function runOptimization() {
     }
 }
 
-/**
- * Run the random patrol algorithm
- */
 async function runRandomPatrol() {
     const rangerCount = parseInt(document.getElementById('rangerCount').value);
     const maxSteps = parseInt(document.getElementById('maxSteps').value);
-
     if (currentMap.riskMap.length === 0) {
         alert('Please generate a map first!');
         return;
     }
-
     Visualizer.setLoading(true);
-
     try {
         const params = {
             gridSize: currentMap.gridSize,
@@ -127,19 +96,13 @@ async function runRandomPatrol() {
             animalMap: currentMap.animalMap,
             terrainMap: currentMap.terrainMap
         };
-
         const result = await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mode: 'random', ...params })
         }).then(r => r.json());
-
-        // Animate the routes
         await Visualizer.animateRoutes(result.routes, 50);
-
-        // Update statistics for random patrol
         Visualizer.updateStatsRandom(result.stats);
-
     } catch (error) {
         alert('Random patrol failed: ' + error.message);
         console.error(error);
@@ -148,12 +111,9 @@ async function runRandomPatrol() {
     }
 }
 
-// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('generateBtn').addEventListener('click', generateRandomMap);
     document.getElementById('optimizeBtn').addEventListener('click', runOptimization);
     document.getElementById('randomPatrolBtn').addEventListener('click', runRandomPatrol);
-
-    // Generate initial map
     generateRandomMap();
 });
